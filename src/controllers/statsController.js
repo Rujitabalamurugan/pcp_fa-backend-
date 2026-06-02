@@ -1,0 +1,1 @@
+// GET /stats: computes totals, status counts, priority grouping
