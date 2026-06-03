@@ -97,11 +97,7 @@ async function syncData(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: 'Sync complete',
-      totalFetched,
-      inserted,
-      duplicates,
-      rejected,
+      message: 'Dataset synchronized successfully',
       data: {
         totalFetched,
         inserted,

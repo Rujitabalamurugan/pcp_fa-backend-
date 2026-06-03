@@ -56,19 +56,17 @@ async function register(req, res) {
       status: 'active'
     });
 
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user._id, userId: user.userId, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
-
+    // Response: data contains flat user fields (no token, no nested user)
     return res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
-        user: user.toJSON(),
-        token
+        _id: user._id,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
@@ -125,12 +123,17 @@ async function login(req, res) {
       { expiresIn: JWT_EXPIRES_IN }
     );
 
+    // Response: token at top level, data contains flat user fields
     return res.status(200).json({
       success: true,
       message: 'Login successful',
+      token,
       data: {
-        user: user.toJSON(),
-        token
+        _id: user._id,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        role: user.role
       }
     });
   } catch (error) {
@@ -148,8 +151,14 @@ async function getMe(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: 'Current user fetched successfully',
-      data: user.toJSON()
+      message: 'Authenticated user fetched successfully',
+      data: {
+        _id: user._id,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

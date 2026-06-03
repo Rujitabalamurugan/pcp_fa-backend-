@@ -24,21 +24,20 @@ router.get('/health', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      database: 'connected',
-      documentCount: total,
-      details: {
-        issues: issueCount,
-        users: userCount,
-        projects: projectCount,
-        comments: commentCount,
-        activities: activityCount
+      message: 'Database connected successfully',
+      data: {
+        database: 'connected',
+        documentCount: total
       }
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      database: 'disconnected',
-      message: error.message
+      message: error.message,
+      data: {
+        database: 'disconnected',
+        documentCount: 0
+      }
     });
   }
 });

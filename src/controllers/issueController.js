@@ -1,7 +1,7 @@
-// CRUD handlers for issues (getAll, getById, create, update, remove, search)
+// CRUD handlers for issues (getAll with pagination, getById, create, update, remove, search)
 const Issue = require('../models/Issue');
 
-// GET /issues - with optional ?status= and ?priority= filters
+// GET /issues - with optional filters and pagination
 async function getAll(req, res) {
   try {
     const filter = {};
@@ -10,10 +10,21 @@ async function getAll(req, res) {
     if (req.query.severity) filter.severity = req.query.severity;
     if (req.query.projectId) filter.projectId = req.query.projectId;
 
-    const issues = await Issue.find(filter).sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await Issue.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+    const issues = await Issue.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+
     return res.status(200).json({
       success: true,
-      message: 'Issues fetched successfully',
+      message: 'Data fetched successfully',
+      page,
+      limit,
+      total,
+      totalPages,
       data: issues
     });
   } catch (error) {
@@ -26,12 +37,25 @@ async function search(req, res) {
   try {
     const q = req.query.q || '';
     if (!q.trim()) {
-      const all = await Issue.find().sort({ createdAt: -1 });
-      return res.status(200).json({ success: true, message: 'All issues', data: all });
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+      const total = await Issue.countDocuments();
+      const totalPages = Math.ceil(total / limit);
+      const all = await Issue.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+      return res.status(200).json({
+        success: true,
+        message: 'Data fetched successfully',
+        page,
+        limit,
+        total,
+        totalPages,
+        data: all
+      });
     }
 
     const regex = new RegExp(q.trim(), 'i');
-    const issues = await Issue.find({
+    const searchFilter = {
       $or: [
         { issueId: regex },
         { title: regex },
@@ -42,11 +66,22 @@ async function search(req, res) {
         { severity: regex },
         { status: regex }
       ]
-    }).sort({ createdAt: -1 });
+    };
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const total = await Issue.countDocuments(searchFilter);
+    const totalPages = Math.ceil(total / limit);
+    const issues = await Issue.find(searchFilter).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
     return res.status(200).json({
       success: true,
-      message: `Found ${issues.length} issues matching "${q}"`,
+      message: 'Data fetched successfully',
+      page,
+      limit,
+      total,
+      totalPages,
       data: issues
     });
   } catch (error) {
